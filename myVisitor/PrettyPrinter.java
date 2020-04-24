@@ -29,8 +29,8 @@ public class PrettyPrinter<R,A> extends myGJDF<R,A> {
      */
     @Override
     public R visit(Goal n, A argu) { //Done
-
-
+        //System.out.println(globalTable.classHasMethod.get("Fac").get(0).al.get(1).name);
+        //System.out.println(globalTable.classHasVariable.get("Init"));
         n.f0.accept(this, argu);
         n.f1.accept(this, argu);
         n.f2.accept(this, argu);
@@ -61,16 +61,18 @@ public class PrettyPrinter<R,A> extends myGJDF<R,A> {
         n.f0.accept(this,argu);
 
         String f1=n.f1.accept(this,argu).toString();
-
+        //System.out.println(f1);
         argu=(A)n.f2.accept(this,argu).toString();
 
         n.f3.accept(this,argu);
-        n.f4.accept(this,null);
+        n.f4.accept(this,argu);
         n.f5.accept(this,argu);
         n.f6.accept(this,argu);
         n.f7.accept(this,argu);
         n.f8.accept(this,argu);
         n.f9.accept(this,argu);
+
+
 
 
 
@@ -80,6 +82,7 @@ public class PrettyPrinter<R,A> extends myGJDF<R,A> {
         if(!f1.equals(typeF10)&&!f1.equals(f10)){
 
             System.out.println("Type error");
+            System.out.println("MethodDeclaration");
             System.exit(1);
         }
         n.f11.accept(this,argu);
@@ -90,18 +93,32 @@ public class PrettyPrinter<R,A> extends myGJDF<R,A> {
     }
 
 
-
     /**
-     * f0 -> "new"
+     * f0 -> "class"
      * f1 -> Identifier()
-     * f2 -> "("
-     * f3 -> ")"
+     * f2 -> "{"
+     * f3 -> ( VarDeclaration() )*
+     * f4 -> ( MethodDeclaration() )*
+     * f5 -> "}"
      */
 
     @Override
     @SuppressWarnings("unchecked")
     public R visit(ClassDeclaration n, A argu) {
-        R _ret=null;
+
+        n.f0.accept(this, argu);
+        String f1=n.f1.accept(this, argu).toString();
+        // System.out.println(globalTable.classHasClass);
+        argu=(A)f1;
+        n.f2.accept(this, argu);
+        n.f3.accept(this, argu);
+        n.f4.accept(this, argu);
+        n.f5.accept(this, argu);
+        return null;
+    }
+    @Override
+    @SuppressWarnings("unchecked")
+    public R visit(ClassExtendsDeclaration n, A argu) {
         n.f0.accept(this, argu);
         String f1=n.f1.accept(this, argu).toString();
 
@@ -110,31 +127,19 @@ public class PrettyPrinter<R,A> extends myGJDF<R,A> {
         n.f3.accept(this, argu);
         n.f4.accept(this, argu);
         n.f5.accept(this, argu);
-        return (R)f1;
+        n.f6.accept(this, argu);
+        n.f7.accept(this, argu);
+        return null;
     }
-
-    /**
-     * f0 -> "class"
-     * f1 -> Identifier()
-     * f2 -> "extends"
-     * f3 -> Identifier()
-     * f4 -> "{"
-     * f5 -> ( VarDeclaration() )*
-     * f6 -> ( MethodDeclaration() )*
-     * f7 -> "}"
-     */
-    public R visit(ClassExtendsDeclaration n, A argu) {
-        R _ret=null;
+    @Override
+    public R visit(VarDeclaration n, A argu) {
         n.f0.accept(this, argu);
         n.f1.accept(this, argu);
         n.f2.accept(this, argu);
-        n.f3.accept(this, argu);
-        n.f4.accept(this, argu);
-        n.f5.accept(this, argu);
-        n.f6.accept(this, argu);
-        n.f7.accept(this, argu);
-        return _ret;
+        return null;
     }
+
+
     /**
      * f0 -> Identifier()
      * f1 -> "="
@@ -149,7 +154,7 @@ public class PrettyPrinter<R,A> extends myGJDF<R,A> {
         String typeF0=f0;
         if(!f0.equals("int")&&!f0.equals("boolean")&&!f0.equals("int[]"))
             typeF0=idToType(f0,argu);
-
+        //System.out.println(argu);
         String f2=n.f2.accept(this, argu).toString();
         String typeF2=f2;
 
@@ -168,16 +173,54 @@ public class PrettyPrinter<R,A> extends myGJDF<R,A> {
         if(!f2.equals("int")&&!f2.equals("boolean")&&!f2.equals("int[]"))
             typeF2=idToType(f2,argu);
 
-
+        //System.out.println(globalTable.classHasVariable.get("Element"));
         if(typeF0.equals(typeF2)||typeF0.equals(f2))
             return (R)typeF0;
         System.out.println("Type error");
+        System.out.println("AssignmentStatement");
         System.exit(1);
 
         return null;
     }
 
-
+    /**
+     * f0 -> Identifier()
+     * f1 -> "["
+     * f2 -> Expression()
+     * f3 -> "]"
+     * f4 -> "="
+     * f5 -> Expression()
+     * f6 -> ";"
+     */
+    public R visit(ArrayAssignmentStatement n, A argu) {
+        R _ret=null;
+        String f0=n.f0.accept(this, argu).toString();
+        if(!"int[]".equals(f0))
+            f0=idToType(f0,argu);
+        if(!"int[]".equals(f0)){
+            System.out.println("Type error");
+            System.exit(1);
+        }
+        n.f1.accept(this, argu);
+        String f2=n.f2.accept(this, argu).toString();
+        if(!"int".equals(f2))
+            f2=idToType(f2,argu);
+        if(!"int".equals(f2)){
+            System.out.println("Type error");
+            System.exit(1);
+        }
+        n.f3.accept(this, argu);
+        n.f4.accept(this, argu);
+        String f5=n.f5.accept(this, argu).toString();
+        if(!"int".equals(f5))
+            f5=idToType(f5,argu);
+        if(!"int".equals(f5)){
+            System.out.println("Type error");
+            System.exit(1);
+        }
+        n.f6.accept(this, argu);
+        return _ret;
+    }
 
 
 
@@ -218,6 +261,9 @@ public class PrettyPrinter<R,A> extends myGJDF<R,A> {
             flag2=true;
         if(!flag1 || !flag2 ){
             System.out.println("Type error");
+            System.out.println("AndExpression");
+
+
             System.exit(1);
         }
         return (R)"boolean";
@@ -246,6 +292,7 @@ public class PrettyPrinter<R,A> extends myGJDF<R,A> {
 
 
         System.out.println("Type error");
+        System.out.println("CompareExpression");
         System.exit(1);
         return null;
 
@@ -324,10 +371,16 @@ public class PrettyPrinter<R,A> extends myGJDF<R,A> {
             return (R)"int";
 
         System.out.println("Type error");
+        System.out.println("PlusExpression");
         System.exit(1);
         return null;
     }
 
+    /**
+     * f0 -> PrimaryExpression()
+     * f1 -> "-"
+     * f2 -> PrimaryExpression()
+     */
     @Override
     @SuppressWarnings("unchecked")
     public R visit(MinusExpression n, A argu) {//Done
@@ -339,7 +392,8 @@ public class PrettyPrinter<R,A> extends myGJDF<R,A> {
         boolean flag1,flag2;
         flag1=f0.equals("int")||idToInt(f0,argu);
         flag2=f2.equals("int")||idToInt(f2,argu);
-
+        //System.out.println(idToType(f0,argu));
+        //System.out.println(argu);
         if(flag1&&flag2)
             return (R)"int";
 
@@ -348,6 +402,7 @@ public class PrettyPrinter<R,A> extends myGJDF<R,A> {
         //System.out.println(globalTable.classHasMethod.get("BBS").get(2).name);
 
         System.out.println("Type error");
+        System.out.println("MinusExpression");
         System.exit(1);
         return null;
     }
@@ -366,8 +421,38 @@ public class PrettyPrinter<R,A> extends myGJDF<R,A> {
             return (R)"int";
 
         System.out.println("Type error");
+        System.out.println("TimesExpression");
         System.exit(1);
         return null;
+    }
+
+    /**
+     * f0 -> "if"
+     * f1 -> "("
+     * f2 -> Expression()
+     * f3 -> ")"
+     * f4 -> Statement()
+     * f5 -> "else"
+     * f6 -> Statement()
+     */
+    @Override
+    public R visit(IfStatement n, A argu) {
+        R _ret=null;
+        n.f0.accept(this, argu);
+        n.f1.accept(this, argu);
+        n.f2.accept(this, argu);
+
+        String exp = (String) n.f2.accept(this, argu);
+        String typeF1 = idToType(exp, argu);
+        if (!"boolean".equals(exp) && !"boolean".equals(typeF1)){
+            System.out.println("Type error");
+        }
+
+        n.f3.accept(this, argu);
+        n.f4.accept(this, argu);
+        n.f5.accept(this, argu);
+        n.f6.accept(this, argu);
+        return _ret;
     }
 
 
@@ -384,7 +469,7 @@ public class PrettyPrinter<R,A> extends myGJDF<R,A> {
         super.visit(n, argu);
         String f0=(String)n.f0.accept(this,argu);
         String f2=(String)n.f2.accept(this,argu);
-
+        //System.out.println(f2);
         boolean flag1,flag2;
         flag1=f0.equals("int[]")||idToIntArr(f0,argu);
         //System.out.println(1233);
@@ -395,6 +480,7 @@ public class PrettyPrinter<R,A> extends myGJDF<R,A> {
 
 
         System.out.println("Type error");
+        System.out.println("ArrayLookup");
         System.exit(1);
         return null;
 
@@ -418,25 +504,22 @@ public class PrettyPrinter<R,A> extends myGJDF<R,A> {
 
         if(!flag ){
             System.out.println("Type error");
+            System.out.println("ArrayLength");
             System.exit(1);
         }
         return (R)"int";
     }
 
-
-    /**
-     * f0 -> FormalParameter()
-     * f1 -> ( FormalParameterRest() )*/
-
-    @SuppressWarnings("unchecked")
-    @Override
+@Override
     public R visit(FormalParameterList n, A argu) {
 
-        n.f0.accept(this, argu);
 
+        n.f0.accept(this, argu);
         n.f1.accept(this, argu);
 
-        return (R)argu;
+        return (R) null;
+
+
     }
 
 
@@ -446,26 +529,25 @@ public class PrettyPrinter<R,A> extends myGJDF<R,A> {
      * f1 -> Identifier()*/
 
     @Override
-    @SuppressWarnings("unchecked")
     public R visit(FormalParameter n, A argu) {
-        String type=n.f0.accept(this, argu).toString();
-        String name=n.f1.accept(this, argu).toString();
+        n.f0.accept(this, argu);
+        n.f1.accept(this, argu);
 
         return null;
     }
 
+
     /**
      * f0 -> ","
-     * f1 -> FormalParameter()*/
-
+     * f1 -> FormalParameter()
+     */
     @Override
     public R visit(FormalParameterRest n, A argu) {
-
         n.f0.accept(this, argu);
-        return n.f1.accept(this, argu);
+        n.f1.accept(this, argu);
+        return null;
 
     }
-
 
 
 
@@ -479,8 +561,14 @@ public class PrettyPrinter<R,A> extends myGJDF<R,A> {
         ArrayList<String> set=new ArrayList<String>();
         String f0=n.f0.accept(this, argu).toString();
         set.add(f0);
-        n.f1.accept(this, (A) set);
 
+        ArrayList<String> f1=null;
+       // System.out.println(n.f1.accept(this, argu));
+        if(n.f1.accept(this, argu)!=null) {
+            f1 = (ArrayList<String>)n.f1.accept(this, argu);
+            set.addAll(f1);
+        }
+        //System.out.println(set);
         return (R) set;
     }
 
@@ -492,11 +580,16 @@ public class PrettyPrinter<R,A> extends myGJDF<R,A> {
     @SuppressWarnings("unchecked")
     public R visit(ExpressionRest n, A argu) {
 
-        ArrayList<String> set=(ArrayList<String>) argu;
 
-        String f1=n.f1.accept(this, null).toString();
-        set.add(f1);
-        return null;
+
+        //ArrayList<String> set=(ArrayList<String>) argu;
+        String f1=null;
+        if(n.f1.accept(this, argu)!=null)
+            f1=n.f1.accept(this, argu).toString();
+        //set.add(f1);
+        //System.out.println(f1);
+        //System.out.println((R)f1);
+        return (R)f1;
 
     }
 
@@ -514,7 +607,7 @@ public class PrettyPrinter<R,A> extends myGJDF<R,A> {
     @SuppressWarnings("unchecked")
     public R visit(MessageSend n, A argu) { //Not Done!!!!!!!!!!!!!!!!!!!!!!!! f4!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-
+       // System.out.println(globalTable.classHasMethod.get("TV").get(0).al);
 
         String f0=n.f0.accept(this,argu).toString();
 
@@ -530,7 +623,7 @@ public class PrettyPrinter<R,A> extends myGJDF<R,A> {
         }
 
         f0=idToType(f0,argu);
-
+        //System.out.println(f0);
         ArrayList<String> methods=globalTable.classHasClass.get("main");
 
         //System.out.println(n.f2.accept(this,argu));
@@ -538,16 +631,20 @@ public class PrettyPrinter<R,A> extends myGJDF<R,A> {
 
         if(!methods.contains(f0)){
             System.out.println("Type error");
+            System.out.println("MessageSend1");
             System.exit(1);
         }
 
-
+        //System.out.println(argu);
         String f2=n.f2.accept(this,argu).toString();
 
         ArrayList<Method> savedMethod=globalTable.classHasMethod.get(f0);
+
+
+
         for(int i=0;i<savedMethod.size();i++){
             if (savedMethod.get(i).name.equals(f2)){
-
+                //System.out.println(savedMethod.get(i).name);
                 ArrayList<String> arg=(ArrayList<String>)n.f4.accept(this,argu);
 
 
@@ -561,18 +658,30 @@ public class PrettyPrinter<R,A> extends myGJDF<R,A> {
                         }
                     }
                 }
-
+                //System.out.println(savedMethod);
+               // if(savedMethod.get(i).al.size()>3)
+                   // System.out.println(savedMethod.get(i).al.get(2).name);
                 if(arguments.size()==savedMethod.get(i).al.size()){
                     for(int j=0;j<savedMethod.get(i).al.size();j++){
-                        if(!arguments.contains(savedMethod.get(i).al.get(j).type)){
-                            System.out.println("Type error");
-                            System.exit(1);
+                        if(!arguments.get(j).equals(savedMethod.get(i).al.get(j).type)){
+                            String superClass=globalTable.subClass.get(arguments.get(j));
+                            if(!superClass.equals(savedMethod.get(i).al.get(j).type)){
+                                System.out.println("Type error");
+                                System.out.println("MessageSend2");
+                                System.exit(1);
+                            }
+
                         }
                     }
+                    return (R) savedMethod.get(i).rtnType;
                 }
-                return (R) savedMethod.get(i).rtnType;
+
             }
+
         }
+        System.out.println("Type error");
+        System.out.println("MessageSend3");
+        System.exit(1);
         return null;
 
     }
@@ -601,6 +710,7 @@ public class PrettyPrinter<R,A> extends myGJDF<R,A> {
 
 
         System.out.println("Type error");
+        System.out.println("NotExpression");
         System.exit(1);
         return null;
 
@@ -628,6 +738,7 @@ public class PrettyPrinter<R,A> extends myGJDF<R,A> {
 
 
         System.out.println("Type error");
+        System.out.println("ArrayAllocationExpression");
         System.exit(1);
         return null;
     }
