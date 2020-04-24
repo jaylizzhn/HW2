@@ -32,15 +32,16 @@ public class myGJDF<R,A> extends GJDepthFirst<R,A> implements GJVisitor<R,A> {
         return _ret;
     }
 
+    @SuppressWarnings("unchecked")
     public R visit(NodeListOptional n, A argu) {
         if ( n.present() ) {
-            R _ret=null;
+            ArrayList<R> _ret=new ArrayList<R>();
             int _count=0;
             for ( Enumeration<Node> e = n.elements(); e.hasMoreElements(); ) {
-                e.nextElement().accept(this,argu);
+                _ret.add(e.nextElement().accept(this,argu));
                 _count++;
             }
-            return _ret;
+            return (R)_ret;
         }
         else
             return null;
@@ -69,6 +70,8 @@ public class myGJDF<R,A> extends GJDepthFirst<R,A> implements GJVisitor<R,A> {
     // User-generated visitor methods below
     //
 
+
+
     public class Variable{
         public String name;
         public String type;
@@ -90,6 +93,7 @@ public class myGJDF<R,A> extends GJDepthFirst<R,A> implements GJVisitor<R,A> {
         public HashMap<A,ArrayList<String>> classHasClass;
         public HashMap<A,ArrayList<Method>> classHasMethod;
         public HashMap<A,ArrayList<Variable>> classHasVariable;
+        public HashMap<String,String> subClass;
 
         void addClass(A a, String n){
             if(globalTable.classHasClass.containsKey(a)){
@@ -112,9 +116,13 @@ public class myGJDF<R,A> extends GJDepthFirst<R,A> implements GJVisitor<R,A> {
             }
         }
         void addVariable(A a, String n, String t){
+
             if(globalTable.classHasVariable.containsKey(a)){
-                globalTable.classHasVariable.get(a).add(new Variable(n,t));
+                Variable v=new Variable(n,t);
+                globalTable.classHasVariable.get(a).add(v);
+
             }
+
             else{
                 ArrayList<Variable> temp=new ArrayList<Variable>();
                 temp.add(new Variable(n,t));
@@ -128,6 +136,7 @@ public class myGJDF<R,A> extends GJDepthFirst<R,A> implements GJVisitor<R,A> {
         table.classHasClass=new HashMap<A,ArrayList<String>>();
         table.classHasMethod= new HashMap<A,ArrayList<Method>>();
         table.classHasVariable= new HashMap<A,ArrayList<Variable>>();
+        table.subClass=new HashMap<String,String>();
         return table;
     }
 
@@ -213,8 +222,13 @@ public class myGJDF<R,A> extends GJDepthFirst<R,A> implements GJVisitor<R,A> {
         R _ret=null;
         n.f0.accept(this, argu);
         String f1=n.f1.accept(this, argu).toString();
-
-        globalTable.addClass(argu,f1);
+       // System.out.println(globalTable.classHasClass);
+        if(globalTable.classHasClass.get(argu)!=null&&globalTable.classHasClass.get(argu).contains(f1)){
+            System.out.println("Type error");
+            System.exit(1);
+        }
+        else
+            globalTable.addClass(argu,f1);
         argu=(A)f1;
         n.f2.accept(this, argu);
         n.f3.accept(this, argu);
@@ -233,12 +247,23 @@ public class myGJDF<R,A> extends GJDepthFirst<R,A> implements GJVisitor<R,A> {
      * f6 -> ( MethodDeclaration() )*
      * f7 -> "}"
      */
+    @SuppressWarnings("unchecked")
     public R visit(ClassExtendsDeclaration n, A argu) {
         R _ret=null;
         n.f0.accept(this, argu);
-        n.f1.accept(this, argu);
+        String f1=n.f1.accept(this, argu).toString();
+        if(globalTable.classHasClass.get("main").contains(f1)){
+            System.out.println("Type error");
+            System.exit(1);
+        }
+        argu=(A)f1;
         n.f2.accept(this, argu);
-        n.f3.accept(this, argu);
+        String f3=n.f3.accept(this, argu).toString();
+        if(!globalTable.classHasClass.get("main").contains(f3)){
+            System.out.println("Type error");
+            System.exit(1);
+        }
+        globalTable.subClass.put(f1,f3);
         n.f4.accept(this, argu);
         n.f5.accept(this, argu);
         n.f6.accept(this, argu);
@@ -254,11 +279,15 @@ public class myGJDF<R,A> extends GJDepthFirst<R,A> implements GJVisitor<R,A> {
     @SuppressWarnings("unchecked")
     public R visit(VarDeclaration n, A argu) {
         R _ret=null;
-
+        //System.out.println("280"+globalTable.classHasMethod.get("Fac").get(0).al);
         String f0=n.f0.accept(this, argu).toString();
 
         String f1=n.f1.accept(this, argu).toString();
+        //System.out.println(globalTable.classHasVariable);
+
+        //String methodName=argu.toString();
         globalTable.addVariable(argu,f1,f0);
+       // System.out.println("288"+globalTable.classHasMethod.get("Fac").get(0).al);
         n.f2.accept(this, argu);
 
         Variable v=new Variable(f1,f0);
@@ -290,43 +319,68 @@ public class myGJDF<R,A> extends GJDepthFirst<R,A> implements GJVisitor<R,A> {
         Method m=new Method();
         m.rtnType=rtn;
         m.al=new ArrayList<Variable>();
-        m.name=f2;
+        m.name=argu+"@"+f2;
 
         n.f3.accept(this, argu);
-        n.f4.accept(this, (A)m);
-
-
+        m.al=(ArrayList<Variable>)n.f4.accept(this, argu);
+        if(m.al==null)
+            m.al=new ArrayList<Variable>();
+        //System.out.println("326"+m.al.get(0).name);
+        //System.out.println(argu);
+        if(m.name=="Init")
+        System.out.println(m.al);
         globalTable.addMethod(argu,m);
 
-        argu=(A)f2;
+        argu=(A)(argu+"@"+n.f2.accept(this,argu).toString());
+       // System.out.println(argu);
+        globalTable.classHasVariable.computeIfAbsent(argu, k -> new ArrayList<Variable>());
 
-        if(globalTable.classHasVariable.get(argu)==null) {
-            globalTable.classHasVariable.put(argu,new ArrayList<Variable>());
-        }
-        globalTable.classHasVariable.get(argu).addAll(m.al);
+        ArrayList<Variable> alcopy=new ArrayList<Variable>(m.al);
+
+        globalTable.classHasVariable.put(argu,alcopy);
+
+
+        //System.out.println(m.al);
 
         n.f5.accept(this, argu);
         n.f6.accept(this, argu);
+        //if(m.name=="Start")
+          //  System.out.println(m.al);
+        //System.out.println(globalTable.classHasMethod.get("Fac").get(0).al);
         n.f7.accept(this, argu);
+       // if(m.name=="Start")
+          //  System.out.println(m.al);
+        //System.out.println(globalTable.classHasMethod.get("Fac").get(0).al);
         n.f8.accept(this, argu);
         n.f9.accept(this, argu);
         n.f10.accept(this, argu);
         n.f11.accept(this, argu);
         n.f12.accept(this, argu);
+
+
         return _ret;
     }
 
+    /**
+     * f0 -> FormalParameter()
+     * f1 -> ( FormalParameterRest() )*/
     @SuppressWarnings("unchecked")
     public R visit(FormalParameterList n, A argu) {
-        //R _ret=null;
-        // Method m=(Method)argu;
+        ArrayList<Variable> set=new ArrayList<Variable>();
 
-        //ArrayList<Variable> al=new ArrayList<Variable>();
-        n.f0.accept(this, argu);
+        Variable f0=(Variable) n.f0.accept(this, argu);
+        set.add(f0);
 
-        n.f1.accept(this, argu);
+        ArrayList<Variable> f1=new ArrayList<Variable>();
 
-        return (R)argu;
+        if(n.f1.accept(this, argu)!=null) {
+            f1 = (ArrayList<Variable>)n.f1.accept(this, argu);
+            set.addAll(f1);
+        }
+
+        return (R) set;
+
+
     }
 
     /**
@@ -337,6 +391,7 @@ public class myGJDF<R,A> extends GJDepthFirst<R,A> implements GJVisitor<R,A> {
 
     @SuppressWarnings("unchecked")
     public R visit(FormalParameter n, A argu) {
+
         String type=n.f0.accept(this, argu).toString();
         String name=n.f1.accept(this, argu).toString();
 
@@ -346,10 +401,6 @@ public class myGJDF<R,A> extends GJDepthFirst<R,A> implements GJVisitor<R,A> {
             return null;
         v = new Variable(name,type);
 
-        Method m=(Method)argu;
-
-        if(m!=null)
-            m.al.add(v);
         return (R)v;
     }
 
@@ -359,18 +410,11 @@ public class myGJDF<R,A> extends GJDepthFirst<R,A> implements GJVisitor<R,A> {
      */
     @SuppressWarnings("unchecked")
     public R visit(FormalParameterRest n, A argu) {
-        //R _ret=null;
-        Method m=(Method) argu;
-        n.f0.accept(this, argu);
+        Variable f1=null;
+        if(n.f1.accept(this, argu)!=null)
+            f1=(Variable) n.f1.accept(this, argu);
+        return (R)f1;
 
-        if( n.f1.accept(this, argu)!=null){
-            Variable v=(Variable)n.f1.accept(this,argu);
-
-            m.al.add(v);
-        }
-
-        return null;
-        //return _ret;
     }
 
     /**
@@ -549,6 +593,7 @@ public class myGJDF<R,A> extends GJDepthFirst<R,A> implements GJVisitor<R,A> {
      */
     public R visit(Expression n, A argu) {
 
+
         return n.f0.accept(this, argu);
     }
 
@@ -660,14 +705,15 @@ public class myGJDF<R,A> extends GJDepthFirst<R,A> implements GJVisitor<R,A> {
      * f4 -> ( ExpressionList() )?
      * f5 -> ")"
      */
+    @SuppressWarnings("unchecked")
     public R visit(MessageSend n, A argu) {
         R _ret=null;
-        n.f0.accept(this, argu);
+        String f0=(String)n.f0.accept(this, argu);
         n.f1.accept(this, argu);
         n.f2.accept(this, argu);
         n.f3.accept(this, argu);
 
-        n.f4.accept(this, null);
+        n.f4.accept(this, argu);
 
         n.f5.accept(this, argu);
         return _ret;
@@ -714,7 +760,7 @@ public class myGJDF<R,A> extends GJDepthFirst<R,A> implements GJVisitor<R,A> {
      *       | BracketExpression()
      */
     public R visit(PrimaryExpression n, A argu) {
-
+        //System.out.println(argu);
         return n.f0.accept(this, argu);
     }
 
