@@ -62,7 +62,7 @@ public class PrettyPrinter<R,A> extends myGJDF<R,A> {
 
         String f1=n.f1.accept(this,argu).toString();
         //System.out.println(f1);
-        argu=(A)n.f2.accept(this,argu).toString();
+        argu=(A)(argu+"@"+n.f2.accept(this,argu).toString());
 
         n.f3.accept(this,argu);
         n.f4.accept(this,argu);
@@ -173,8 +173,12 @@ public class PrettyPrinter<R,A> extends myGJDF<R,A> {
         if(!f2.equals("int")&&!f2.equals("boolean")&&!f2.equals("int[]"))
             typeF2=idToType(f2,argu);
 
+        //System.out.println(globalTable.classHasVariable.get());
         //System.out.println(globalTable.classHasVariable.get("Element"));
-        if(typeF0.equals(typeF2)||typeF0.equals(f2))
+        //System.out.println(globalTable.classHasVariable.get());
+        System.out.println(f0);
+
+        if(typeF0!=null&& (typeF0.equals(typeF2)||typeF0.equals(f2)))
             return (R)typeF0;
         System.out.println("Type error");
         System.out.println("AssignmentStatement");
@@ -328,6 +332,38 @@ public class PrettyPrinter<R,A> extends myGJDF<R,A> {
 
                 if (variable.name.equals(s)) {
                     return variable.type.toString();
+                }
+            }
+        }
+
+        String ms=(String)argu;
+        if(ms.contains("@")){
+            int at=ms.indexOf("@");
+            String subClassName=ms.substring(0,at);
+            String newArgu=globalTable.subClass.get(subClassName);
+           // if(subClassName=="MyVisitor")
+            ArrayList<Variable> al2=globalTable.classHasVariable.get(newArgu);
+            if(al2!=null){
+
+                for (Variable variable : al2) {
+                    //System.out.println(variable.name);
+                    if (variable.name.equals(s)) {
+
+                        return variable.type.toString();
+                    }
+                }
+            }
+            newArgu=globalTable.subClass.get(subClassName)+ms.substring(at);
+
+            al2=globalTable.classHasVariable.get(newArgu);
+            if(al2!=null){
+
+                for (Variable variable : al2) {
+                   // System.out.println(variable.name);
+                    if (variable.name.equals(s)) {
+
+                        return variable.type.toString();
+                    }
                 }
             }
         }
@@ -640,10 +676,10 @@ public class PrettyPrinter<R,A> extends myGJDF<R,A> {
 
         ArrayList<Method> savedMethod=globalTable.classHasMethod.get(f0);
 
-
+        //System.out.println(savedMethod.get(0).name);
 
         for(int i=0;i<savedMethod.size();i++){
-            if (savedMethod.get(i).name.equals(f2)){
+            if (savedMethod.get(i).name.equals(f0+"@"+f2)){
                 //System.out.println(savedMethod.get(i).name);
                 ArrayList<String> arg=(ArrayList<String>)n.f4.accept(this,argu);
 
@@ -653,14 +689,19 @@ public class PrettyPrinter<R,A> extends myGJDF<R,A> {
                     for(String s:arg){
                         if(s.equals("int")||s.equals("boolean"))
                             arguments.add(s);
+                        else if (s.equals("this")){
+                            String ms=(String)argu;
+                            int at=ms.indexOf("@");
+                            arguments.add(ms.substring(0,at));
+                        }
                         else {
                             arguments.add(idToType(s, argu));
                         }
                     }
                 }
-                //System.out.println(savedMethod);
-               // if(savedMethod.get(i).al.size()>3)
-                   // System.out.println(savedMethod.get(i).al.get(2).name);
+
+                //System.out.println(arguments);
+
                 if(arguments.size()==savedMethod.get(i).al.size()){
                     for(int j=0;j<savedMethod.get(i).al.size();j++){
                         if(!arguments.get(j).equals(savedMethod.get(i).al.get(j).type)){

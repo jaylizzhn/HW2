@@ -331,7 +331,7 @@ public class myGJDF<R,A> extends GJDepthFirst<R,A> implements GJVisitor<R,A> {
         System.out.println(m.al);
         globalTable.addMethod(argu,m);
 
-        argu=(A)f2;
+        argu=(A)(argu+"@"+n.f2.accept(this,argu).toString());
        // System.out.println(argu);
         globalTable.classHasVariable.computeIfAbsent(argu, k -> new ArrayList<Variable>());
 
